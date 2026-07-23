@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuvo Landing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0D1622; color: #E8EFF5; font-family: 'Space Grotesk', sans-serif; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; text-align: center; }
+    .container { max-width: 480px; width: 100%; }
+    .dots { display: flex; gap: 0.3rem; justify-content: center; margin-bottom: 2rem; }
+    .dot { width: 12px; height: 12px; border-radius: 2px; transition: all 0.2s; cursor: pointer; }
+    .dot:hover { transform: scale(1.3); }
+    .dot-active { box-shadow: 0 0 12px currentColor; transform: scale(1.3); }
+    h1 { font-size: 2.4rem; font-weight: 700; margin: 0 0 0.75rem 0; font-family: 'IBM Plex Mono', monospace; line-height: 1.1; }
+    h1 .accent { color: #5B9FD8; }
+    .subtitle { font-size: 1rem; color: #8A96A8; margin: 0 0 2rem 0; line-height: 1.6; }
+    .buttons { display: flex; flex-direction: column; gap: 0.75rem; }
+    button { padding: 0.95rem 2rem; border: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem; cursor: pointer; font-family: 'Space Grotesk', sans-serif; transition: all 0.2s; }
+    .btn-primary { background: #5B9FD8; color: #0D1622; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); }
+    .btn-secondary { background: transparent; color: #E8EFF5; border: 1px solid rgba(100,140,180,0.25); }
+    .btn-secondary:hover { border-color: #E8EFF5; }
+
+    /* Search inline */
+    .search-box { display: none; margin-top: 1rem; }
+    .search-box.open { display: block; }
+    .search-box input { width: 100%; padding: 0.9rem 1rem; border-radius: 6px; border: 1px solid rgba(100,140,180,0.3); background: rgba(0,0,0,0.35); color: #E8EFF5; font-family: 'IBM Plex Mono', monospace; font-size: 1rem; outline: none; }
+    .search-box input:focus { border-color: #5B9FD8; }
+    .suggestions { margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; }
+    .chip { padding: 0.35rem 0.8rem; border-radius: 999px; background: rgba(100,140,180,0.12); font-size: 0.8rem; cursor: pointer; border: 1px solid transparent; }
+    .chip:hover { border-color: #5B9FD8; }
+
+    /* Résultat */
+    .result { display: none; margin-top: 1.25rem; padding: 1.25rem; background: rgba(100,140,180,0.08); border-radius: 8px; text-align: left; }
+    .result.open { display: block; }
+    .result h2 { font-family: 'IBM Plex Mono', monospace; font-size: 1.1rem; margin-bottom: 0.9rem; }
+    .bar-row { display: grid; grid-template-columns: 90px 1fr 60px; align-items: center; gap: 0.6rem; margin-bottom: 0.55rem; font-size: 0.82rem; }
+    .bar-track { height: 10px; border-radius: 5px; background: rgba(0,0,0,0.4); overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 5px; transition: width 0.5s ease; }
+    .bar-val { color: #8A96A8; font-family: 'IBM Plex Mono', monospace; text-align: right; }
+    .not-found { color: #F87171; font-size: 0.85rem; }
+
+    /* Panel explorer */
+    .mineral-filter { display: none; margin-top: 1.25rem; padding: 1rem; background: rgba(100,140,180,0.08); border-radius: 8px; text-align: left; }
+    .mineral-filter.open { display: block; }
+    .mineral-filter h3 { font-size: 0.85rem; color: #6B7A8B; margin-bottom: 0.75rem; }
+    .filter-item { padding: 0.6rem 0.7rem; border-radius: 4px; background: rgba(0,0,0,0.3); border-left: 3px solid; cursor: pointer; margin-bottom: 0.45rem; font-size: 0.85rem; transition: all 0.2s; }
+    .filter-item:hover { background: rgba(0,0,0,0.5); }
+    .filter-foods { display: none; margin-top: 0.4rem; color: #8A96A8; font-size: 0.78rem; line-height: 1.5; }
+    .filter-item.expanded .filter-foods { display: block; }
+
+
+    .qr-section { margin-top: 1.75rem; display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+    .qr-box { width: 120px; height: 120px; padding: 10px; background: rgba(100,140,180,0.08); border: 1px solid rgba(100,140,180,0.2); border-radius: 10px; }
+    .qr-box svg { width: 100%; height: 100%; display: block; }
+    .qr-label { font-size: 0.7rem; color: #6B7A8B; letter-spacing: 0.05em; font-family: 'IBM Plex Mono', monospace; }
+
+    .scanner { display: none; margin-top: 1rem; }
+    .scanner.open { display: block; }
+    .scan-hint { font-size: 0.75rem; color: #8A96A8; margin-bottom: 0.5rem; font-family: 'IBM Plex Mono', monospace; }
+    .scanner input { width: 100%; padding: 0.8rem 1rem; border-radius: 6px; border: 1px solid rgba(100,140,180,0.3); background: rgba(0,0,0,0.35); color: #E8EFF5; font-family: 'IBM Plex Mono', monospace; outline: none; }
+    .loading { color: #5B9FD8; font-size: 0.85rem; font-family: 'IBM Plex Mono', monospace; }
+    .footer { margin-top: 2.5rem; border-top: 1px solid rgba(100,140,180,0.1); padding-top: 1.5rem; }
+    .footer-badge { font-size: 0.7rem; color: #6B7A8B; margin: 0 0 0.5rem 0; letter-spacing: 0.05em; }
+    .footer-text { font-size: 0.75rem; color: #6B7A8B; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="dots" id="mineralDots"></div>
+
+    <h1>
+      Quel minéral<br>
+      vous manque<br>
+      <span class="accent">vraiment?</span>
+    </h1>
+
+    <p class="subtitle">
+      Dites l'aliment. Voyez le breakdown Ca/Fe/Mg/K en 2 secondes. Pas d'inscription. Pas de calcul.
+    </p>
+
+    <div class="buttons">
+      <button class="btn-primary" id="analyzeBtn">Analyser un aliment</button>
+      <button class="btn-secondary" id="exploreBtn">Explorer les 5 éléments</button>
+      <button class="btn-secondary" id="scanBtn">📷 Scanner un produit</button>
+    </div>
+
+    <div class="search-box" id="searchBox">
+      <input type="text" id="foodInput" placeholder="ex: épinards, lentilles..." autocomplete="off">
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+
+
+    <div class="scanner" id="scannerBox">
+      <div class="scan-hint">Tape le code-barres du produit</div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:0.5rem;margin-top:0.5rem">
+        <input type="text" id="manualBarcode" placeholder="code-barres..." inputmode="numeric" autocomplete="off">
+        <button class="btn-primary" id="validateBarcode" style="padding:0.95rem 1rem">Go</button>
+      </div>
+    </div>
+
+    <div class="result" id="result"></div>
+
+    <div class="mineral-filter" id="filterPanel">
+      <h3>TAPER UN MINÉRAL → ALIMENTS RICHES</h3>
+      <div id="filterList"></div>
+    </div>
+
+    <div class="qr-section">
+      <div class="qr-box"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31 31" shape-rendering="crispEdges"><path stroke="#E8EFF5" d="M1 1.5h7m3 0h1m1 0h2m2 0h1m2 0h1m2 0h7M1 2.5h1m5 0h1m1 0h1m1 0h3m1 0h3m1 0h2m2 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m2 0h3m1 0h2m1 0h1m1 0h2m2 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m2 0h1m1 0h5m2 0h1m3 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h1m3 0h3m1 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m2 0h5m3 0h3m2 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M11 8.5h1m2 0h2m1 0h4M1 9.5h1m1 0h1m1 0h1m1 0h1m3 0h1m1 0h1m1 0h2m1 0h1m1 0h1m4 0h1m2 0h1M1 10.5h5m2 0h4m1 0h1m1 0h2m1 0h2m1 0h4m1 0h1m2 0h1M1 11.5h1m2 0h1m1 0h2m3 0h4m3 0h2m2 0h1m1 0h1m2 0h3M1 12.5h2m3 0h1m3 0h1m5 0h1m1 0h1m1 0h2m3 0h1m2 0h1M1 13.5h3m2 0h3m2 0h3m3 0h2m3 0h2m2 0h1m1 0h2M3 14.5h2m3 0h4m1 0h2m1 0h3m2 0h3m2 0h1m2 0h1M3 15.5h2m1 0h3m1 0h2m3 0h5m2 0h1m3 0h1m1 0h2M4 16.5h2m3 0h1m2 0h4m1 0h4m5 0h1m1 0h1M2 17.5h1m4 0h1m1 0h1m3 0h1m1 0h4m2 0h4m1 0h1m1 0h2M2 18.5h2m1 0h1m3 0h1m3 0h1m1 0h2m1 0h1m2 0h3m2 0h2m1 0h1M1 19.5h1m1 0h1m3 0h2m1 0h2m1 0h2m2 0h1m3 0h1m2 0h2m2 0h2M2 20.5h2m2 0h1m1 0h1m1 0h1m1 0h2m2 0h1m1 0h2m6 0h1m1 0h1M1 21.5h1m2 0h1m2 0h2m1 0h4m4 0h1m2 0h5M9 22.5h2m1 0h1m1 0h1m2 0h1m3 0h1m3 0h1m1 0h3M1 23.5h7m2 0h1m4 0h1m1 0h1m2 0h2m1 0h1m1 0h2m1 0h2M1 24.5h1m5 0h1m3 0h2m1 0h3m1 0h1m2 0h1m3 0h2m1 0h1M1 25.5h1m1 0h3m1 0h1m1 0h4m2 0h1m2 0h2m1 0h5m3 0h1M1 26.5h1m1 0h3m1 0h1m4 0h1m1 0h2m1 0h1m7 0h1m1 0h3M1 27.5h1m1 0h3m1 0h1m1 0h5m1 0h1m2 0h1m1 0h2m2 0h3m2 0h1M1 28.5h1m5 0h1m3 0h2m3 0h1m1 0h1m1 0h2m1 0h3m2 0h1M1 29.5h7m1 0h1m1 0h5m1 0h2m1 0h2m2 0h1m3 0h2"/></svg>
+</div>
+      <span class="qr-label">SCANNER → OUVRIR NUVO</span>
+    </div>
+
+    <div class="footer">
+      <p class="footer-badge">GRATUIT · SANS COMPTE · DONNÉES USDA</p>
+      <p class="footer-text">20 aliments locaux + recherche USDA. 100% dans le navigateur.</p>
+    </div>
+  </div>
+
+  <script>
+    const MINERALS = [
+      { id: 'ca', name: 'Calcium',   hex: '#4ADE80', unit: 'mg', ajr: 1000 },
+      { id: 'fe', name: 'Fer',       hex: '#F87171', unit: 'mg', ajr: 14 },
+      { id: 'mg', name: 'Magnésium', hex: '#A78BFA', unit: 'mg', ajr: 375 },
+      { id: 'zn', name: 'Zinc',      hex: '#60A5FA', unit: 'mg', ajr: 10 },
+      { id: 'k',  name: 'Potassium', hex: '#FBBF24', unit: 'mg', ajr: 3500 }
+    ];
+
+    // mg / 100g
+    const FOODS = {
+      'épinards':      { ca: 99,  fe: 2.7, mg: 79,  zn: 0.5, k: 558 },
+      'lentilles':     { ca: 19,  fe: 3.3, mg: 36,  zn: 1.3, k: 369 },
+      'amandes':       { ca: 269, fe: 3.7, mg: 270, zn: 3.1, k: 733 },
+      'banane':        { ca: 5,   fe: 0.3, mg: 27,  zn: 0.2, k: 358 },
+      'sardines':      { ca: 382, fe: 2.9, mg: 39,  zn: 1.3, k: 397 },
+      'chocolat noir': { ca: 73,  fe: 12,  mg: 228, zn: 3.3, k: 715 },
+      'avocat':        { ca: 12,  fe: 0.6, mg: 29,  zn: 0.6, k: 485 },
+      'pois chiches':  { ca: 49,  fe: 2.9, mg: 48,  zn: 1.5, k: 291 },
+      'yaourt':        { ca: 121, fe: 0.1, mg: 12,  zn: 0.6, k: 155 },
+      'boeuf':         { ca: 18,  fe: 2.6, mg: 21,  zn: 4.8, k: 318 },
+      'quinoa':        { ca: 17,  fe: 1.5, mg: 64,  zn: 1.1, k: 172 },
+      'tofu':          { ca: 350, fe: 5.4, mg: 30,  zn: 0.8, k: 121 },
+      'noix de cajou': { ca: 37,  fe: 6.7, mg: 292, zn: 5.8, k: 660 },
+      'patate douce':  { ca: 30,  fe: 0.6, mg: 25,  zn: 0.3, k: 337 },
+      'saumon':        { ca: 12,  fe: 0.8, mg: 29,  zn: 0.6, k: 490 },
+      'oeuf':          { ca: 56,  fe: 1.8, mg: 12,  zn: 1.3, k: 138 },
+      'brocoli':       { ca: 47,  fe: 0.7, mg: 21,  zn: 0.4, k: 316 },
+      'graines courge':{ ca: 46,  fe: 8.8, mg: 592, zn: 7.8, k: 809 },
+      'haricots noirs':{ ca: 27,  fe: 2.1, mg: 70,  zn: 1.1, k: 355 },
+      'kale':          { ca: 254, fe: 1.6, mg: 33,  zn: 0.4, k: 348 }
+    };
+
+    const $ = id => document.getElementById(id);
+    let activeMineralId = null;
+
+    // ---- Dots ----
+    MINERALS.forEach(m => {
+      const dot = document.createElement('span');
+      dot.className = 'dot';
+      dot.style.background = m.hex;
+      dot.style.color = m.hex;
+      dot.title = m.name;
+      dot.onclick = () => {
+        activeMineralId = activeMineralId === m.id ? null : m.id;
+        document.querySelectorAll('.dot').forEach((d, i) =>
+          d.classList.toggle('dot-active', MINERALS[i].id === activeMineralId));
+        if (activeMineralId) { openExplore(activeMineralId); }
+        else { $('filterPanel').classList.remove('open'); }
+      };
+      $('mineralDots').appendChild(dot);
+    });
+
+    // ---- Analyser ----
+    $('analyzeBtn').onclick = () => {
+      const box = $('searchBox');
+      box.classList.toggle('open');
+      $('filterPanel').classList.remove('open');
+      if (box.classList.contains('open')) {
+        renderSuggestions();
+        $('foodInput').focus();
+      }
+    };
+
+    function renderSuggestions() {
+      const s = $('suggestions');
+      s.innerHTML = '';
+      Object.keys(FOODS).slice(0, 8).forEach(name => {
+        const c = document.createElement('span');
+        c.className = 'chip';
+        c.textContent = name;
+        c.onclick = () => { $('foodInput').value = name; analyze(name); };
+        s.appendChild(c);
+      });
+    }
+
+    $('foodInput').addEventListener('input', e => {
+      const q = e.target.value.trim().toLowerCase();
+      const s = $('suggestions');
+      s.innerHTML = '';
+      const matches = Object.keys(FOODS).filter(n => n.includes(q)).slice(0, 8);
+      (q ? matches : Object.keys(FOODS).slice(0, 8)).forEach(name => {
+        const c = document.createElement('span');
+        c.className = 'chip';
+        c.textContent = name;
+        c.onclick = () => { $('foodInput').value = name; analyze(name); };
+        s.appendChild(c);
+      });
+      if (q && FOODS[q]) analyze(q);
+    });
+
+    $('foodInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') analyze(e.target.value.trim().toLowerCase());
+    });
+
+    function analyze(name) {
+      const r = $('result');
+      const data = FOODS[name];
+      if (!data) {
+        r.innerHTML = `<span class="not-found">« ${name} » pas dans la base locale (20 aliments). Version USDA → recherche complète.</span>`;
+        r.classList.add('open');
+        return;
+      }
+      let html = `<h2>${name} <span style="color:#6B7A8B;font-size:0.75rem">/ 100g · % AJR</span></h2>`;
+      MINERALS.forEach(m => {
+        const val = data[m.id];
+        const pct = Math.min(100, Math.round(val / m.ajr * 100));
+        html += `
+          <div class="bar-row">
+            <span>${m.name}</span>
+            <div class="bar-track"><div class="bar-fill" style="width:0%;background:${m.hex}" data-w="${pct}%"></div></div>
+            <span class="bar-val">${pct}%</span>
+          </div>`;
+      });
+      r.innerHTML = html;
+      r.classList.add('open');
+      requestAnimationFrame(() => {
+        r.querySelectorAll('.bar-fill').forEach(b => b.style.width = b.dataset.w);
+      });
+    }
+
+    // ---- Explorer ----
+    $('exploreBtn').onclick = () => {
+      const p = $('filterPanel');
+      p.classList.toggle('open');
+      $('searchBox').classList.remove('open');
+      $('result').classList.remove('open');
+      if (p.classList.contains('open')) renderFilters();
+    };
+
+    function openExplore(mineralId) {
+      $('filterPanel').classList.add('open');
+      $('searchBox').classList.remove('open');
+      $('result').classList.remove('open');
+      renderFilters(mineralId);
+    }
+
+    function renderFilters(expandId) {
+      const list = $('filterList');
+      list.innerHTML = '';
+      MINERALS.forEach(m => {
+        const top = Object.entries(FOODS)
+          .sort((a, b) => b[1][m.id] - a[1][m.id])
+          .slice(0, 5)
+          .map(([n, d]) => `${n} (${d[m.id]}${m.unit})`)
+          .join(' · ');
+        const item = document.createElement('div');
+        item.className = 'filter-item' + (m.id === expandId ? ' expanded' : '');
+        item.style.borderLeftColor = m.hex;
+        item.innerHTML = `<strong>${m.name}</strong> — AJR ${m.ajr}${m.unit}<div class="filter-foods">Top 5: ${top}</div>`;
+        item.onclick = () => item.classList.toggle('expanded');
+        list.appendChild(item);
+      });
+    }
+
+    // ---- Scanner code-barres (OpenFoodFacts lookup) ----
+    $('scanBtn').onclick = () => {
+      const box = $('scannerBox');
+      $('searchBox').classList.remove('open');
+      $('filterPanel').classList.remove('open');
+      $('result').classList.remove('open');
+      box.classList.add('open');
+      $('manualBarcode').focus();
+    };
+
+    $('validateBarcode').onclick = () => {
+      const code = $('manualBarcode').value.trim();
+      if (code) lookupBarcode(code);
+    };
+
+    $('manualBarcode').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const code = e.target.value.trim();
+        if (code) lookupBarcode(code);
+      }
+    });
+
+    async function lookupBarcode(code) {
+      showResult(`<span class="loading">Recherche ${code}...</span>`);
+      try {
+        const resp = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=product_name,nutriments`);
+        const json = await resp.json();
+        if (json.status !== 1) {
+          showResult(`<span class="not-found">Produit ${code} introuvable sur OpenFoodFacts.</span>`);
+          return;
+        }
+        const n = json.product.nutriments || {};
+        const name = json.product.product_name || code;
+        // OFF: valeurs en g/100g → mg
+        const toMg = v => v == null ? null : v * 1000;
+        const data = {
+          ca: toMg(n.calcium_100g),
+          fe: toMg(n.iron_100g),
+          mg: toMg(n.magnesium_100g),
+          zn: toMg(n.zinc_100g),
+          k:  toMg(n.potassium_100g)
+        };
+        renderProduct(name, data);
+      } catch {
+        showResult('<span class="not-found">API OpenFoodFacts inaccessible ici (sandbox). Déployé sur Vercel → fonctionne.</span>');
+      }
+    }
+
+    function renderProduct(name, data) {
+      let html = `<h2>${name} <span style="color:#6B7A8B;font-size:0.75rem">/ 100g · % AJR</span></h2>`;
+      let hasData = false;
+      MINERALS.forEach(m => {
+        const val = data[m.id];
+        if (val == null) {
+          html += `<div class="bar-row"><span>${m.name}</span><div class="bar-track"></div><span class="bar-val">—</span></div>`;
+          return;
+        }
+        hasData = true;
+        const pct = Math.min(100, Math.round(val / m.ajr * 100));
+        html += `
+          <div class="bar-row">
+            <span>${m.name}</span>
+            <div class="bar-track"><div class="bar-fill" style="width:0%;background:${m.hex}" data-w="${pct}%"></div></div>
+            <span class="bar-val">${pct}%</span>
+          </div>`;
+      });
+      if (!hasData) html += '<div class="not-found" style="margin-top:0.5rem">Aucune donnée minéraux pour ce produit.</div>';
+      showResult(html);
+      requestAnimationFrame(() => {
+        $('result').querySelectorAll('.bar-fill').forEach(b => b.style.width = b.dataset.w);
+      });
+    }
+
+    function showResult(html) {
+      const r = $('result');
+      r.innerHTML = html;
+      r.classList.add('open');
+    }
+  </script>
+</body>
+</html>
